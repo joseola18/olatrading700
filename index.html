@@ -1,0 +1,720 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OLA TRADING - Gestión Profesional de Cuentas MetaTrader 5</title>
+  <meta name="description" content="OLA TRADING - Gestión profesional de cuentas MetaTrader 5, señales limitadas y transparencia total con acceso a cuentas reales y demo." />
+  <meta name="keywords" content="trading, metatrader 5, gestión de cuentas, señales de trading, oro, bitcoin, copytrading" />
+  <meta name="author" content="José Gabriel Ola" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #e0e7ff;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      padding-top: 110px;
+    }
+  @media (max-width: 768px) {
+    body {
+      padding-top: 140px;
+    }
+  }
+
+    .btn-royal {
+      background-color: #4169e1;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    .btn-royal:hover {
+      background-color: #27408b;
+    }
+    .ticker-fijo {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background-color: #1e293b;
+      padding: 10px;
+      border-radius: 0 0 8px 8px;
+      z-index: 10000;
+      /* Para PC */
+      height: auto;
+      overflow: visible;
+    }
+    @media (max-width: 640px) {
+      .ticker-fijo {
+        padding: 5px 10px;
+        height: 40px; /* Altura menor en móvil */
+        overflow-x: auto; /* Scroll horizontal */
+        white-space: nowrap; /* No wrap */
+      }
+      .ticker-fijo::-webkit-scrollbar {
+        display: none; /* Oculta scrollbar en Webkit */
+      }
+      .ticker-fijo {
+        -ms-overflow-style: none;  /* IE y Edge */
+        scrollbar-width: none;  /* Firefox */
+      }
+    }
+    nav {
+      position: sticky;
+      top: 50px;
+      z-index: 9999;
+    }
+    hr {
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+      border-top-width: 1px;
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+    #modalForm {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0,0,0,0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+      padding: 1rem;
+    }
+    #modalForm.flex {
+      display: flex !important;
+    }
+    #modalForm form {
+      background-color: #1e293b;
+      padding: 2rem;
+      border-radius: 0.75rem;
+      max-width: 400px;
+      width: 100%;
+    }
+    #modalForm label {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+    }
+    #modalForm input, #modalForm textarea {
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      border: none;
+      margin-bottom: 1rem;
+      background-color: #0f172a;
+      color: #e0e7ff;
+    }
+    #modalForm input::placeholder, #modalForm textarea::placeholder {
+      color: #94a3b8;
+    }
+    #modalForm button.close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #e0e7ff;
+      cursor: pointer;
+    }
+
+    /* NUEVO: Estilos para gráfico Oro mejorado y responsive */
+    .tradingview-orogold-container {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      max-height: 500px;
+      overflow: hidden;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    @media (max-width: 768px) {
+      .tradingview-orogold-container {
+        max-height: 300px;
+      }
+    }
+<style>
+  @media (max-width: 768px) {
+    .ola-trading-fix {
+      margin-top: 60px; /* Aumenta la separación del cartel con el ticker */
+    }
+  }
+@media (max-width: 768px) {
+  .ola-trading-fix {
+    margin-top: 30px !important; /* Menor separación */
+    z-index: 10100;
+    position: relative;
+    font-size: 20px !important;  /* Tamaño de fuente más chico */
+  }
+
+  .ticker-fijo {
+    z-index: 10000;
+  }
+
+  body {
+    padding-top: 120px; /* Menor espacio para no empujar tanto */
+  }
+
+  nav .text-4xl {
+    font-size: 20px !important; /* Ajuste específico del tamaño del texto */
+  }
+}
+
+
+</style>
+
+  </style>
+</head>
+<body class="antialiased">
+
+  <!-- Ticker real TradingView -->
+  <div class="tradingview-widget-container ticker-fijo" style="">
+    <div class="tradingview-widget-container__widget"></div>
+    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+    {
+      "symbols": [
+        {"proName": "OANDA:EURUSD", "title": "EURUSD"},
+        {"proName": "OANDA:USDJPY", "title": "USDJPY"},
+        {"proName": "OANDA:GBPUSD", "title": "GBPUSD"},
+        {"proName": "OANDA:XAUUSD", "title": "Oro (XAUUSD)"},
+        {"proName": "BITSTAMP:BTCUSD", "title": "Bitcoin (BTCUSD)"},
+        {"proName": "OANDA:USDJPY", "title": "CADJPY"},
+        {"proName": "NASDAQ:AAPL", "title": "Apple (AAPL)"}
+      ],
+      "colorTheme": "dark",
+      "isTransparent": false,
+      "displayMode": "adaptive",
+      "locale": "es",
+      "maxHeight": 40
+    }
+    </script>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="bg-gray-900 border-b border-gray-700 shadow-md">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <!-- LOGO + CARTEL OLA TRADING (con arreglo para celular) -->
+<div class="flex items-center space-x-3 ola-trading-fix">
+  <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/2bc5c418-0976-4814-a639-ca70504db31f.png" alt="Logo OLA TRADING" class="h-10" />
+  <span class="text-white font-extrabold text-4xl md:text-xl tracking-wide">OLA TRADING</span>
+</div>
+
+
+      <div class="hidden md:flex space-x-10 font-semibold text-gray-300">
+        <a href="#servicios" class="hover:text-blue-600 transition">Servicios</a>
+        <a href="#graficos" class="hover:text-blue-600 transition">Gráficos</a>
+        <a href="#cuentas" class="hover:text-blue-600 transition">Cuentas</a>
+        <a href="#depositos" class="hover:text-blue-600 transition">Depósitos</a>
+        <a href="#contacto" class="hover:text-blue-600 transition">Contacto</a>
+      </div>
+      <div class="hidden md:block">
+        <button onclick="toggleModal()" class="btn-royal px-5 py-2 rounded-md font-semibold shadow-md cursor-pointer">Iniciar / Registrarse</button>
+      </div>
+      <button id="btn-menu" class="md:hidden text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-600 rounded" aria-label="Abrir menú móvil" aria-expanded="false">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <div id="mobile-menu" class="hidden bg-gray-800 px-6 pb-6 md:hidden" role="menu" aria-label="Menú móvil">
+      <a href="#servicios" class="block py-2 text-gray-300 hover:text-blue-600 font-semibold" role="menuitem">Servicios</a>
+      <a href="#graficos" class="block py-2 text-gray-300 hover:text-blue-600 font-semibold" role="menuitem">Gráficos</a>
+      <a href="#cuentas" class="block py-2 text-gray-300 hover:text-blue-600 font-semibold" role="menuitem">Cuentas</a>
+      <a href="#depositos" class="block py-2 text-gray-300 hover:text-blue-600 font-semibold" role="menuitem">Depósitos</a>
+      <a href="#contacto" class="block py-2 text-gray-300 hover:text-blue-600 font-semibold" role="menuitem">Contacto</a>
+      <button onclick="toggleModal()" class="block w-full py-3 mt-3 btn-royal text-white rounded font-semibold hover:bg-blue-700 transition" role="menuitem">Iniciar / Registrarse</button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="text-center py-20 px-6 max-w-4xl mx-auto fade-in">
+    <h1 class="text-2xl sm:text-4xl font-bold tracking-wide text-white text-center whitespace-nowrap overflow-hidden">OLA TRADING</h1>
+
+    <p class="text-xl text-blue-600 font-semibold mb-6">Gestión Profesional de Cuentas MetaTrader 5 & Señales Limitadas</p>
+    <p class="text-gray-300 max-w-3xl mx-auto mb-10 leading-relaxed text-lg">
+      En OLA TRADING potenciamos tu capital con una gestión experta, transparencia total y señales exclusivas para maximizar tus resultados en los mercados financieros.
+      Accede a cuentas reales con usuario y contraseña para seguir nuestra operativa día a día.
+    </p>
+    <button onclick="toggleModal()" class="btn-royal px-8 py-4 rounded-lg font-semibold shadow-lg transition inline-block">Iniciar / Registrarse</button>
+  </header>
+
+  <hr />
+
+  <!-- Servicios -->
+  <section id="servicios" class="max-w-7xl mx-auto px-6 py-16 fade-in">
+    <h2 class="text-4xl text-white font-bold mb-10 text-center">Nuestros Servicios Destacados</h2>
+    <div class="grid md:grid-cols-3 gap-8 text-gray-300">
+      <article class="bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition">
+        <div class="flex items-center mb-4">
+          <svg class="w-10 h-10 text-blue-500 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 12h6m2 0a2 2 0 110 4H7a2 2 0 110-4h10z"/>
+          </svg>
+          <h3 class="text-2xl font-semibold">Gestión de Cuentas Personalizadas</h3>
+        </div>
+        <p>
+          Nuestro equipo profesional gestiona tu cuenta de MetaTrader 5 con una estrategia adaptada a tu perfil de riesgo.
+          Optimizamos tus inversiones con análisis continuo para maximizar beneficios y minimizar pérdidas.
+        </p>
+        <button onclick="toggleModal()" class="inline-block mt-4 text-blue-400 font-semibold hover:text-blue-600 cursor-pointer">Solicitar Gestión</button>
+      </article>
+
+      <article class="bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition">
+        <div class="flex items-center mb-4">
+          <svg class="w-10 h-10 text-blue-500 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+          </svg>
+          <h3 class="text-2xl font-semibold">Copytrading Transparente</h3>
+        </div>
+        <p>
+          Sigue en tiempo real las operaciones de traders expertos.
+          Control total y transparencia con reportes diarios y acceso directo a las señales para que operes con confianza.
+        </p>
+        <button onclick="toggleModal()" class="inline-block mt-4 text-blue-400 font-semibold hover:text-blue-600 cursor-pointer">Unirme al Copytrading</button>
+      </article>
+
+      <article class="bg-gray-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition">
+        <div class="flex items-center mb-4">
+          <svg class="w-10 h-10 text-blue-500 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 9V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2h6a2 2 0 002-2v-2M7 13h4m-4 4h4"/>
+          </svg>
+          <h3 class="text-2xl font-semibold">Billetera Virtual Segura</h3>
+        </div>
+        <p>
+          Deposita y retira fondos con rapidez y seguridad.
+          Gestiona tu capital desde una billetera virtual con bajas comisiones y múltiples métodos de pago.
+        </p>
+        <a href="#depositos" class="inline-block mt-4 text-blue-400 font-semibold hover:text-blue-600">Ver Métodos de Depósito</a>
+      </article>
+    </div>
+  </section>
+
+  <hr />
+  <!-- Gráfico en vivo Oro con indicadores y estrategia -->
+  <section id="graficos" class="max-w-7xl mx-auto px-6 py-16 bg-gray-900 rounded-xl shadow-lg fade-in">
+    <h2 class="text-4xl text-white font-bold mb-10 text-center">Gráfico en Tiempo Real - Oro (XAUUSD) con Estrategia</h2>
+    
+    <!-- Gráfico de oro (solo en PC) -->
+<div id="grafico-oro" style="margin: 30px auto; max-width: 1000px;">
+  <div class="tradingview-widget-container tradingview-orogold-container">
+    <div id="tradingview-orogold"></div>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script type="text/javascript">
+      new TradingView.widget({
+        container_id: "tradingview-orogold",
+        width: "100%",
+        height: 500,
+        symbol: "OANDA:XAUUSD",
+        interval: "60",
+        timezone: "Etc/UTC",
+        theme: "dark",
+        style: "1",
+        locale: "es",
+        toolbar_bg: "#1e293b",
+        enable_publishing: false,
+        hide_top_toolbar: true,
+        save_image: false,
+        studies: ["RSI@tv-basicstudies"]
+      });
+    </script>
+  </div>
+</div>
+
+
+<!-- Datos técnicos de oro (solo en celular) -->
+<div id="datos-tecnicos-oro" style="margin: 30px auto; max-width: 1000px;">
+  <div class="tradingview-widget-container">
+    <div class="tradingview-widget-container__widget"></div>
+    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js">
+    {
+      "interval": "1h",
+      "width": "100%",
+      "isTransparent": false,
+      "height": "450",
+      "symbol": "OANDA:XAUUSD",
+      "showIntervalTabs": true,
+      "locale": "es",
+      "colorTheme": "dark"
+    }
+    </script>
+  </div>
+</div>
+
+    </div>
+  </section>
+
+  <hr />
+
+  <!-- El resto de tu página continua igual... -->
+
+  <!-- Aquí seguiría todo lo demás de tu código que ya tienes -->
+
+  <script>
+    // Función para abrir/cerrar modal
+    function toggleModal() {
+      const modal = document.getElementById('modal');
+      modal.classList.toggle('hidden');
+    }
+
+    // Manejo del formulario de contacto para evitar comportamiento por defecto y mostrar alerta
+    function handleSubmit(event) {
+      event.preventDefault();
+      alert("Gracias por contactarnos. Pronto nos comunicaremos contigo.");
+      event.target.reset();
+      return false;
+    }
+
+    // Manejo del formulario del modal (login)
+    function handleLogin(event) {
+      event.preventDefault();
+      const email = document.getElementById('emailLogin').value;
+      const whatsapp = document.getElementById('whatsappLogin').value;
+
+      // Aquí puedes agregar la lógica para enviar los datos a tu servidor o servicio de correo
+      alert(`Gracias por registrarte.\nCorreo: ${email}\nWhatsApp: ${whatsapp}`);
+
+      // Cierra el modal y limpia formulario
+      toggleModal();
+      event.target.reset();
+    }
+
+    // Toggle menú móvil
+    const btnMenu = document.getElementById('btn-menu');
+    const mobileMenu = document.getElementById('mobile-menu');
+    btnMenu.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+      btnMenu.setAttribute('aria-expanded', mobileMenu.classList.contains('hidden') ? 'false' : 'true');
+    });
+  </script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("#form-contacto");
+    const mensaje = document.querySelector("#mensaje-contacto");
+
+    if (form) {
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        // Enviar formulario a FormSubmit
+        fetch(form.action, {
+          method: "POST",
+          body: new FormData(form)
+        })
+        .then(response => {
+          form.reset();
+          mensaje.classList.remove("hidden");
+        })
+        .catch(error => {
+          alert("Hubo un error al enviar. Intenta de nuevo.");
+        });
+      });
+    }
+  });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("#form-contacto");
+    const mensaje = document.querySelector("#mensaje-contacto");
+
+    if (form) {
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        fetch(form.action, {
+          method: "POST",
+          body: new FormData(form)
+        })
+        .then(response => {
+          form.reset();
+          mensaje.classList.remove("hidden");
+        })
+        .catch(error => {
+          alert("Hubo un error al enviar. Intenta de nuevo.");
+        });
+      });
+    }
+  });
+</script>
+
+
+
+
+</body>
+</html>
+
+
+  <!-- Cuentas reales y demo + gráfico BTC con RSI 14 -->
+  <section id="cuentas" class="max-w-7xl mx-auto px-6 py-16 fade-in">
+    <h2 class="text-4xl font-bold text-white mb-10 text-center">Cuentas Reales y Demo - Transparencia Total</h2>
+    <div class="grid md:grid-cols-2 gap-10 text-gray-300">
+      <div>
+        <p class="mb-5 leading-relaxed">
+          En OLA TRADING brindamos total transparencia: compartimos cuentas reales con usuario y contraseña para que puedas seguir nuestra operativa en vivo, sin sorpresas.
+          También ofrecemos cuentas demo para que practiques y compruebes la calidad de nuestras señales sin riesgo.
+        </p>
+        <p class="mb-5">
+          Nuestra comunidad crece en TikTok y YouTube con transmisiones en directo y análisis detallados.
+          Te invitamos a seguirnos para que veas el rendimiento real y nuestra gestión profesional.
+        </p>
+        <div class="flex space-x-6 mt-4">
+          <a href="https://www.tiktok.com/@joseola?is_from_webapp=1&sender_device=pc" target="_blank" class="flex items-center space-x-2 hover:text-pink-500 transition font-semibold" aria-label="TikTok">
+            <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M9 3h3v12a3 3 0 11-3-3v-9z"/></svg>
+            <span>TikTok</span>
+          </a>
+          <a href="https://www.youtube.com/@joseola777" target="_blank" class="flex items-center space-x-2 hover:text-red-600 transition font-semibold" aria-label="YouTube">
+            <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M10 15l5-3-5-3v6z"/></svg>
+            <span>YouTube</span>
+          </a>
+        </div>
+      </div>
+      <div class="rounded-lg overflow-hidden shadow-lg w-full" style="aspect-ratio: 16 / 9; max-height: 500px;">
+
+
+<!-- ANÁLISIS TÉCNICO BTC CON RESPONSIVE AJUSTADO -->
+<div class="tradingview-widget-container" style="margin-top: 15px;">
+  <div class="tradingview-widget-container__widget" style="height: auto; min-height: 550px;"></div>
+  <div class="tradingview-widget-copyright">
+    <a href="https://es.tradingview.com/symbols/BTCUSD/technicals/" rel="noopener" target="_blank">Análisis técnico de BTCUSD</a> por TradingView
+  </div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-technical-analysis.js" async>
+  {
+    "interval": "1D",
+    "width": "100%",
+    "isTransparent": false,
+    "height": 300,
+    "symbol": "BITSTAMP:BTCUSD",
+    "showIntervalTabs": true,
+    "locale": "es",
+    "colorTheme": "dark"
+  }
+  </script>
+</div>
+
+
+
+
+
+
+    </div>
+  </section>
+
+  <hr />
+  <!-- Sección Copytrading -->
+  <section id="copytrading" class="max-w-7xl mx-auto px-6 py-16 fade-in">
+    <h2 class="text-4xl text-white font-bold mb-5 text-center">Copytrading Transparente</h2>
+    <p class="text-gray-300 max-w-3xl mx-auto mb-8 leading-relaxed text-center">
+      Sigue nuestras operaciones en tiempo real y copia las estrategias de traders expertos con total transparencia y control.
+      Accede a reportes diarios y señales exclusivas para potenciar tu capital sin perder control sobre tus inversiones.
+    </p>
+    <div class="text-center">
+      <button onclick="toggleModal()" class="btn-royal px-8 py-4 rounded-lg font-semibold shadow-lg hover:bg-blue-700 transition">
+        Unirme al Copytrading
+      </button>
+    </div>
+  </section>
+
+  <hr />
+
+  <!-- Depósitos rápidos y seguros -->
+  <section id="depositos" class="max-w-7xl mx-auto px-6 py-16 fade-in">
+    <h2 class="text-4xl text-white font-bold mb-10 text-center">Depositos Rapidos y Seguros</h2>
+    <p class="text-gray-300 max-w-3xl mx-auto mb-5 leading-relaxed text-center">
+      Ofrecemos multiples metodos para que deposites y retires fondos con facilidad y seguridad. Puedes usar transferencias bancarias, billeteras virtuales, o criptomonedas. Todos los depositos se acreditan en tiempo real para que puedas operar sin demoras.
+    </p>
+    <ul class="list-disc list-inside space-y-2 text-gray-300 max-w-3xl mx-auto mb-8">
+      <li>Transferencia bancaria nacional e internacional</li>
+      <li>Billetera virtual con comisiones bajas</li>
+      <li>Pagos con criptomonedas: Bitcoin, Ethereum, USDT</li>
+      <li>Atencion personalizada para cada metodo de pago</li>
+    </ul>
+
+    <hr class="mt-12 border-gray-600" />
+
+    <hr />
+
+   
+    <h3 class="text-2xl text-white font-semibold mb-5 text-center">Contacto y Consultas</h3>
+    <p class="text-gray-300 max-w-3xl mx-auto mb-5 leading-relaxed text-center">
+      Queres saber mas o empezar con nuestra gestión? Contactanos:
+    </p>
+    <div class="flex flex-col items-center space-y-3">
+      <a href="https://www.mql5.com/es/market/product/127017?source=Site+Profile+Seller" target="_blank" rel="noopener" class="btn-royal px-6 py-3 rounded font-semibold hover:bg-blue-700 transition">COPYTRADING PAGO</a>
+      <a href="https://chat.whatsapp.com/J5h2DiXiLlZ6jlTSU2Oryt" target="_blank" class="btn-royal px-6 py-3 rounded font-semibold hover:bg-blue-700 transition">COMUNIDAD DE TRADERS</a>
+      <a href="https://wa.me/5493886412987" target="_blank" rel="noopener" class="btn-royal px-6 py-3 rounded font-semibold hover:bg-blue-700 transition">WhatsApp</a>
+    </div>
+  </section>
+
+  <hr />
+  <!-- Contacto formulario -->
+  <section id="contacto" class="max-w-7xl mx-auto px-6 py-16 fade-in">
+    <h2 class="text-4xl text-white font-bold mb-10 text-center">Contacto</h2>
+    <div id="mensajeContacto" class="hidden mt-6 text-center text-green-400 font-bold text-xl">
+  GRACIAS, PRONTO TE CONTACTAREMOS.
+</div>
+
+  <input type="hidden" name="_next" value="https://tusitio.com/gracias.html">
+  <input type="hidden" name="_captcha" value="false">
+  <div>
+    <label for="name" class="block mb-2 font-semibold">Nombre completo</label>
+    <input type="text" id="name" name="name" required class="w-full p-3 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+  </div>
+  <div>
+    <label for="email" class="block mb-2 font-semibold">Correo electrónico</label>
+    <input type="email" id="email" name="email" required class="w-full p-3 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+  </div>
+  <div>
+    <label for="whatsapp" class="block mb-2 font-semibold">Número de WhatsApp</label>
+    <input type="tel" id="whatsapp" name="whatsapp" required class="w-full p-3 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+  </div>
+  <div>
+    <label for="message" class="block mb-2 font-semibold">Mensaje</label>
+    <textarea id="message" name="message" rows="5" required class="w-full p-3 rounded bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+  </div>
+  <button type="submit" class="btn-royal w-full py-4 rounded font-semibold hover:bg-blue-700 transition">Enviar Mensaje</button>
+</form>
+
+  </section>
+
+  <hr />
+
+  <!-- Modal para Iniciar / Registrarse -->
+  <div id="modal" class="fixed inset-0 bg-black bg-opacity-70 hidden flex justify-center items-center z-50" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDesc">
+    <div class="bg-gray-900 rounded-lg shadow-xl max-w-md w-full p-8 relative mx-4">
+      <button onclick="toggleModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white focus:outline-none text-3xl leading-none" aria-label="Cerrar modal">&times;</button>
+      <h3 id="modalTitle" class="text-2xl text-white font-bold mb-6 text-center">Iniciar / Registrarse</h3>
+      <form id="loginForm" class="space-y-6" action="https://formsubmit.co/joseola18@yahoo.com.ar" method="POST"><div id="mensajeLogin" class="hidden mt-6 text-center text-green-400 font-bold text-xl">
+  GRACIAS, PRONTO TE CONTACTAREMOS.
+</div>
+
+  <form id="form-contacto" action="https://formsubmit.co/joseola18@yahoo.com.ar" method="POST" class="bg-gray-900 text-white p-6 rounded-lg shadow-lg space-y-4">
+  <input type="text" name="name" placeholder="Nombre" required
+    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-700" />
+
+  <input type="email" name="email" placeholder="Email" required
+    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-700" />
+
+  <textarea name="message" placeholder="Mensaje" required
+    class="w-full p-2 rounded bg-gray-800 text-white border border-gray-700"></textarea>
+
+  <!-- Oculta el captcha y evita redirecciones -->
+  <input type="hidden" name="_captcha" value="false" />
+  <input type="hidden" name="_template" value="box" />
+  <input type="hidden" name="_next" value="">
+
+  <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded">
+    Enviar
+  </button>
+
+  <!-- Cartel de agradecimiento -->
+  <div id="mensaje-contacto" class="mt-6 p-4 bg-green-600 text-white rounded text-center hidden">
+    ¡GRACIAS! PRONTO LO CONTACTAREMOS.
+  </div>
+</form>
+
+
+
+    </div>
+  </div>
+
+  <hr />
+
+  <script>
+    // Función para abrir/cerrar modal
+    function toggleModal() {
+      const modal = document.getElementById('modal');
+      modal.classList.toggle('hidden');
+    }
+
+    // Manejo del formulario de contacto para evitar comportamiento por defecto y mostrar alerta
+    function handleSubmit(event) {
+      event.preventDefault();
+      alert("Gracias por contactarnos. Pronto nos comunicaremos contigo.");
+      event.target.reset();
+      return false;
+    }
+
+    // Manejo del formulario del modal (login)
+    function handleLogin(event) {
+      event.preventDefault();
+      const email = document.getElementById('emailLogin').value;
+      const whatsapp = document.getElementById('whatsappLogin').value;
+
+      // Aquí puedes agregar la lógica para enviar los datos a tu servidor o servicio de correo
+      alert(`Gracias por registrarte.\nCorreo: ${email}\nWhatsApp: ${whatsapp}`);
+
+      // Cierra el modal y limpia formularior
+      toggleModal();
+      event.target.reset();
+    }
+
+    // Toggle menú móvil
+    const btnMenu = document.getElementById('btn-menu');
+    const mobileMenu = document.getElementById('mobile-menu');
+    btnMenu.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+      btnMenu.setAttribute('aria-expanded', mobileMenu.classList.contains('hidden') ? 'false' : 'true');
+    });
+  </script>
+<section id="cuentas-comunitarias" class="max-w-7xl mx-auto px-6 py-16 fade-in">
+  <h2 class="text-4xl text-white font-bold mb-10 text-center">Cuentas Comunitarias</h2>
+  <p class="text-gray-300 text-center mb-8">Accedé libremente a nuestras cuentas demo y reales compartidas. Ideal para seguimiento y transparencia en gestión.</p>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-sm text-left text-gray-300 border border-gray-700 rounded-lg">
+      <thead class="bg-gray-800 text-white">
+        <tr>
+          <th scope="col" class="px-6 py-3 border-b border-gray-700">Usuario</th>
+          <th scope="col" class="px-6 py-3 border-b border-gray-700">Contraseña</th>
+          <th scope="col" class="px-6 py-3 border-b border-gray-700">Servidor</th>
+          <th scope="col" class="px-6 py-3 border-b border-gray-700">Tipo</th>
+          <th scope="col" class="px-6 py-3 border-b border-gray-700">Balance</th>
+        </tr>
+      </thead>
+      <tbody class="bg-gray-900">
+        <tr class="hover:bg-gray-800">
+          <td class="px-6 py-4 border-b border-gray-700">30799104</td>
+          <td class="px-6 py-4 border-b border-gray-700">OLAtrading1?</td>
+          <td class="px-6 py-4 border-b border-gray-700">Deriv.com Limited</td>
+          <td class="px-6 py-4 border-b border-gray-700">Demo</td>
+          <td class="px-6 py-4 border-b border-gray-700">$40,000.00</td>
+        </tr>
+        <tr class="hover:bg-gray-800">
+          <td class="px-6 py-4 border-b border-gray-700">108576826</td>
+          <td class="px-6 py-4 border-b border-gray-700">Trader1234$</td>
+          <td class="px-6 py-4 border-b border-gray-700">Exness Technologies Ltd</td>
+          <td class="px-6 py-4 border-b border-gray-700">Exness-MT5Real6</td>
+          <td class="px-6 py-4 border-b border-gray-700">$2,100.00</td>
+        </tr>
+        <tr class="hover:bg-gray-800">
+          <td class="px-6 py-4 border-b border-gray-700">65432198</td>
+          <td class="px-6 py-4 border-b border-gray-700">CopyFx</td>
+          <td class="px-6 py-4 border-b border-gray-700">RoboForex-Demo</td>
+          <td class="px-6 py-4 border-b border-gray-700">Demo</td>
+          <td class="px-6 py-4 border-b border-gray-700">$5,250.00</td>
+        </tr>
+        <tr class="hover:bg-gray-800">
+          <td class="px-6 py-4 border-b border-gray-700">11223344</td>
+          <td class="px-6 py-4 border-b border-gray-700">OlaReal</td>
+          <td class="px-6 py-4 border-b border-gray-700">XM-Live</td>
+          <td class="px-6 py-4 border-b border-gray-700">Real</td>
+          <td class="px-6 py-4 border-b border-gray-700">$3,780.00</td>
+        </tr>
+        <tr class="hover:bg-gray-800">
+          <td class="px-6 py-4 border-b border-gray-700">99887766</td>
+          <td class="px-6 py-4 border-b border-gray-700">OlaFxDemo</td>
+          <td class="px-6 py-4 border-b border-gray-700">Exness-Demo</td>
+          <td class="px-6 py-4 border-b border-gray-700">Demo</td>
+          <td class="px-6 py-4 border-b border-gray-700">$7,600.00</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+       <hr />
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-gray-400 py-6 text-center text-sm select-none">
+    <p>@OLATRADING 2025 - Todos los derechos reservados</p>
+    <p>CEO José Gabriel Ola</p>
+    <p>Olivos, Buenos Aires, Argentina</p>
+  </footer>
